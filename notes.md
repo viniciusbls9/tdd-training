@@ -7,6 +7,7 @@
 - Test Code In Production
 - Duplicate Code
 - Shotgun Surgery
+- Long Parameter List
 
 # Design Patterns/Principles/Conventions
 - You Ain't Gonna Need It (YAGNI)
