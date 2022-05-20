@@ -20,3 +20,4 @@
 - Small Commits
 - System Under Test (SUT)
 - Strategy Pattern
+- Factory Pattern
