@@ -1,21 +1,23 @@
+import { set, reset } from 'mockdate'
 class CheckLastEventStatus {
   constructor(private readonly loadLastEventRepository: LoadLastEventRepository) { }
   async perform(groupId: string): Promise<string> {
-    await this.loadLastEventRepository.loadLastEvent(groupId)
-    return 'done'
+    const event = await this.loadLastEventRepository.loadLastEvent(groupId)
+
+    return event === undefined ? 'done' : 'active'
   }
 }
 
 interface LoadLastEventRepository {
-  loadLastEvent: (groupId: string) => Promise<undefined>
+  loadLastEvent: (groupId: string) => Promise<{ endDate: Date } | undefined>
 }
 
 class LoadLastEventRepositorySpy implements LoadLastEventRepository {
   groupId?: string
   callsCount = 0
-  output: undefined
+  output?: { endDate: Date }
 
-  async loadLastEvent(groupId: string): Promise<undefined> {
+  async loadLastEvent(groupId: string): Promise<{ endDate: Date } | undefined> {
     this.groupId = groupId
     this.callsCount++
     return this.output
@@ -34,6 +36,14 @@ const makeSut = (): SutOutput => {
 }
 
 describe('CheckLastEventStatus', () => {
+  beforeAll(() => {
+    set(new Date())
+  })
+
+  afterAll(() => {
+    reset()
+  })
+
   test('Should get last event data', async () => {
     const { sut, loadLastEventRepository } = makeSut()
 
@@ -50,5 +60,16 @@ describe('CheckLastEventStatus', () => {
     const status = await sut.perform('any_group_id')
 
     expect(status).toBe('done')
+  })
+
+  test('Should return status active when now is before event end time', async () => {
+    const { sut, loadLastEventRepository } = makeSut()
+    loadLastEventRepository.output = {
+      endDate: new Date(new Date().getTime() + 1)
+    }
+
+    const status = await sut.perform('any_group_id')
+
+    expect(status).toBe('active')
   })
 })
